@@ -1,0 +1,197 @@
+{
+ "range_m_free space_5kbps": 10000.0,
+ "range_m_free space_15kbps": 10000.0,
+ "range_m_free space_58kbps": 10000.0,
+ "range_m_free space_236kbps": 10000.0,
+ "range_m_two-ray ground_5kbps": 1191.0,
+ "range_m_two-ray ground_15kbps": 893.0,
+ "range_m_two-ray ground_58kbps": 669.0,
+ "range_m_two-ray ground_236kbps": 447.0,
+ "range_m_log-distance, n = 3_5kbps": 2122.0,
+ "range_m_log-distance, n = 3_15kbps": 1445.0,
+ "range_m_log-distance, n = 3_58kbps": 986.0,
+ "range_m_log-distance, n = 3_236kbps": 575.0,
+ "two_ray_crossover_m": 14.5,
+ "t_ping_req_ms": 8.33,
+ "t_tlm_legacy_resp_ms": 15.62,
+ "t_tlm_v2_resp_ms": 66.67,
+ "t_image_legacy_s": 10.83,
+ "image_legacy_efficiency": 0.962,
+ "tlm_v2_efficiency": 0.875,
+ "mc_frames_per_point": 40000,
+ "mc_ber": [
+  {
+   "ber": 1e-05,
+   "legacy": {
+    "correct": 0.999975,
+    "wrong": 0.0,
+    "lost": 2.5e-05
+   },
+   "v2": {
+    "correct": 0.99945,
+    "wrong": 0.0,
+    "lost": 0.00055
+   }
+  },
+  {
+   "ber": 3e-05,
+   "legacy": {
+    "correct": 0.999875,
+    "wrong": 0.0,
+    "lost": 0.000125
+   },
+   "v2": {
+    "correct": 0.9982,
+    "wrong": 0.0,
+    "lost": 0.0018
+   }
+  },
+  {
+   "ber": 0.0001,
+   "legacy": {
+    "correct": 0.999225,
+    "wrong": 0.0001,
+    "lost": 0.000675
+   },
+   "v2": {
+    "correct": 0.994075,
+    "wrong": 0.0,
+    "lost": 0.005925
+   }
+  },
+  {
+   "ber": 0.0003,
+   "legacy": {
+    "correct": 0.99775,
+    "wrong": 0.0001,
+    "lost": 0.00215
+   },
+   "v2": {
+    "correct": 0.9821,
+    "wrong": 0.0,
+    "lost": 0.0179
+   }
+  },
+  {
+   "ber": 0.001,
+   "legacy": {
+    "correct": 0.99145,
+    "wrong": 0.000925,
+    "lost": 0.007625
+   },
+   "v2": {
+    "correct": 0.93705,
+    "wrong": 0.0,
+    "lost": 0.06295
+   }
+  },
+  {
+   "ber": 0.003,
+   "legacy": {
+    "correct": 0.9777,
+    "wrong": 0.00265,
+    "lost": 0.01965
+   },
+   "v2": {
+    "correct": 0.8284,
+    "wrong": 0.0,
+    "lost": 0.1716
+   }
+  },
+  {
+   "ber": 0.01,
+   "legacy": {
+    "correct": 0.923325,
+    "wrong": 0.00915,
+    "lost": 0.067525
+   },
+   "v2": {
+    "correct": 0.5273,
+    "wrong": 0.0,
+    "lost": 0.4727
+   }
+  }
+ ],
+ "mc_drop": [
+  {
+   "p_drop": 0.0001,
+   "legacy": {
+    "correct": 0.999625,
+    "wrong": 0.000375,
+    "lost": 0.0
+   },
+   "v2": {
+    "correct": 0.99915,
+    "wrong": 0.0,
+    "lost": 0.00085
+   }
+  },
+  {
+   "p_drop": 0.0003,
+   "legacy": {
+    "correct": 0.999375,
+    "wrong": 0.000625,
+    "lost": 0.0
+   },
+   "v2": {
+    "correct": 0.998175,
+    "wrong": 0.0,
+    "lost": 0.001825
+   }
+  },
+  {
+   "p_drop": 0.001,
+   "legacy": {
+    "correct": 0.9967,
+    "wrong": 0.0033,
+    "lost": 0.0
+   },
+   "v2": {
+    "correct": 0.9919,
+    "wrong": 0.0,
+    "lost": 0.0081
+   }
+  },
+  {
+   "p_drop": 0.003,
+   "legacy": {
+    "correct": 0.9901,
+    "wrong": 0.009775,
+    "lost": 0.000125
+   },
+   "v2": {
+    "correct": 0.977175,
+    "wrong": 0.0,
+    "lost": 0.022825
+   }
+  },
+  {
+   "p_drop": 0.01,
+   "legacy": {
+    "correct": 0.968075,
+    "wrong": 0.031175,
+    "lost": 0.00075
+   },
+   "v2": {
+    "correct": 0.92395,
+    "wrong": 0.0,
+    "lost": 0.07605
+   }
+  },
+  {
+   "p_drop": 0.03,
+   "legacy": {
+    "correct": 0.90005,
+    "wrong": 0.089275,
+    "lost": 0.010675
+   },
+   "v2": {
+    "correct": 0.7804,
+    "wrong": 0.0,
+    "lost": 0.2196
+   }
+  }
+ ],
+ "mc_total_trials": 520000,
+ "mc_v2_wrong_total": 0
+}

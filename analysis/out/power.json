@@ -1,0 +1,80 @@
+{
+ "battery_Wh": 540.0,
+ "usable_Wh": 432.0,
+ "flat_torque_fraction": 0.1,
+ "team_budget_W": 365.33,
+ "modes": {
+  "S0 standby": {
+   "total_W": 8.8,
+   "endurance_h": 48.92,
+   "battery_current_A": 0.74,
+   "Mobility motors": 0.0,
+   "Brain (Pi 4 + MCUs)": 4.2,
+   "LiDAR + camera": 0.0,
+   "Payload sensors": 3.61,
+   "Robotic arm": 0.0,
+   "Radio link": 0.08,
+   "Conversion losses": 0.94
+  },
+  "S1 science stop": {
+   "total_W": 25.7,
+   "endurance_h": 16.79,
+   "battery_current_A": 2.14,
+   "Mobility motors": 0.0,
+   "Brain (Pi 4 + MCUs)": 7.9,
+   "LiDAR + camera": 3.25,
+   "Payload sensors": 3.61,
+   "Robotic arm": 7.2,
+   "Radio link": 0.3,
+   "Conversion losses": 3.48
+  },
+  "S2 flat traverse": {
+   "total_W": 78.6,
+   "endurance_h": 5.5,
+   "battery_current_A": 6.55,
+   "Mobility motors": 61.32,
+   "Brain (Pi 4 + MCUs)": 7.9,
+   "LiDAR + camera": 3.25,
+   "Payload sensors": 3.61,
+   "Robotic arm": 0.0,
+   "Radio link": 0.3,
+   "Conversion losses": 2.21
+  },
+  "S3 rough / skid turns": {
+   "total_W": 204.5,
+   "endurance_h": 2.11,
+   "battery_current_A": 17.04,
+   "Mobility motors": 187.2,
+   "Brain (Pi 4 + MCUs)": 7.9,
+   "LiDAR + camera": 3.25,
+   "Payload sensors": 3.61,
+   "Robotic arm": 0.0,
+   "Radio link": 0.3,
+   "Conversion losses": 2.21
+  },
+  "S4 worst case (rated)": {
+   "total_W": 326.4,
+   "endurance_h": 1.32,
+   "battery_current_A": 27.2,
+   "Mobility motors": 288.0,
+   "Brain (Pi 4 + MCUs)": 7.9,
+   "LiDAR + camera": 3.25,
+   "Payload sensors": 3.61,
+   "Robotic arm": 18.0,
+   "Radio link": 0.3,
+   "Conversion losses": 5.38
+  }
+ },
+ "profile_avg_W": 64.7,
+ "profile_endurance_h": 6.67,
+ "solar_Earth_BeniSuef_PWM_Wh_per_day": 186.0,
+ "solar_Earth_BeniSuef_PWM_recharge_days": 2.32,
+ "solar_Earth_BeniSuef_MPPT_Wh_per_day": 240.0,
+ "solar_Earth_BeniSuef_MPPT_recharge_days": 1.8,
+ "solar_Mars_equator_tau0.5_PWM_Wh_per_day": 93.0,
+ "solar_Mars_equator_tau0.5_PWM_recharge_days": 4.65,
+ "solar_Mars_equator_tau0.5_MPPT_Wh_per_day": 120.0,
+ "solar_Mars_equator_tau0.5_MPPT_recharge_days": 3.6,
+ "team_claim_recharge_h": 10.8,
+ "stall_peak_current_A": 84.0
+}

@@ -1,0 +1,32 @@
+{
+ "seeds": 20,
+ "mean_distance_m": 31.05336776546405,
+ "E1": {
+  "label": "mean of 3 wheels, nominal \u03c7 (2023)",
+  "final_mean_m": 3.554,
+  "final_std_m": 0.761,
+  "final_pct_of_distance": 11.44,
+  "rms_mean_m": 1.749
+ },
+ "E2": {
+  "label": "mean, calibrated \u03c7",
+  "final_mean_m": 0.428,
+  "final_std_m": 0.238,
+  "final_pct_of_distance": 1.38,
+  "rms_mean_m": 0.313
+ },
+ "E3": {
+  "label": "median, calibrated \u03c7",
+  "final_mean_m": 0.387,
+  "final_std_m": 0.22,
+  "final_pct_of_distance": 1.25,
+  "rms_mean_m": 0.24
+ },
+ "E4": {
+  "label": "median + gyro heading",
+  "final_mean_m": 0.148,
+  "final_std_m": 0.104,
+  "final_pct_of_distance": 0.48,
+  "rms_mean_m": 0.15
+ }
+}

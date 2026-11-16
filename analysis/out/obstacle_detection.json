@@ -1,0 +1,66 @@
+{
+ "heights": [
+  0.1,
+  0.15,
+  0.2,
+  0.25,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7
+ ],
+ "offsets": [
+  -0.6,
+  -0.5,
+  -0.4,
+  -0.3,
+  -0.2,
+  -0.1,
+  -0.0,
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6
+ ],
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "A_lidar_only": {
+  "counts": {
+   "collision": 231,
+   "stop": 66,
+   "clear": 54
+  },
+  "conflict_cells": 99,
+  "collision_cells": 77,
+  "mean_stop_clearance_m": 0.273,
+  "min_stop_clearance_m": 0.23
+ },
+ "B_lidar_plus_ultrasonic": {
+  "counts": {
+   "collision": 75,
+   "stop": 222,
+   "clear": 54
+  },
+  "conflict_cells": 99,
+  "collision_cells": 25,
+  "mean_stop_clearance_m": 0.284,
+  "min_stop_clearance_m": 0.258
+ },
+ "C_ultrasonic_with_memory": {
+  "counts": {
+   "collision": 0,
+   "stop": 339,
+   "clear": 12
+  },
+  "conflict_cells": 113,
+  "collision_cells": 0,
+  "mean_stop_clearance_m": 0.277,
+  "min_stop_clearance_m": 0.098
+ }
+}

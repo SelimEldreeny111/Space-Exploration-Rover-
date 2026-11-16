@@ -1,0 +1,28 @@
+{
+ "duration_s": 157.0,
+ "distance_m": 31.52,
+ "scans": 785,
+ "collisions": 0,
+ "chi_true_over_nominal": 1.1,
+ "ate_rmse_odometry_m": 0.907,
+ "ate_rmse_slam_m": 0.107,
+ "final_err_odometry_m": 1.166,
+ "final_err_slam_m": 0.14,
+ "max_err_slam_m": 0.155,
+ "heading_rmse_odometry_deg": 18.05,
+ "heading_rmse_slam_deg": 0.87,
+ "map_odometry": {
+  "accuracy_mean_m": 0.257,
+  "accuracy_p95_m": 0.8,
+  "completeness_10cm": 0.273,
+  "spurious_gt15cm": 0.513,
+  "occupied_cells": 2144
+ },
+ "map_slam": {
+  "accuracy_mean_m": 0.025,
+  "accuracy_p95_m": 0.1,
+  "completeness_10cm": 0.909,
+  "spurious_gt15cm": 0.017,
+  "occupied_cells": 2082
+ }
+}
