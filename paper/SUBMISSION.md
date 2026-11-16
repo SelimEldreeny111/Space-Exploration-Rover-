@@ -18,8 +18,9 @@ in `../analysis/` (see the top-level README).
   wheelbase 0.82 m, LiDAR height 0.62 m); dates of the laboratory trials.
 - [ ] **Photos.** Fig. 1 and Fig. 9 show only the rover and the laboratory. The
   video shows team members, so get everyone's consent before publishing it.
-- [ ] **Code availability.** If you publish the repository, add its URL to the
-  abstract's last sentence and to a "Data and code availability" footnote.
+- [x] **Code availability.** Done: the repository URL is in the abstract's last
+  sentence and in the "Data and Code Availability" section. For a double-blind
+  venue, remove both (and the author block) from the review copy.
 - [ ] **Venue length.** Many IEEE conferences allow 6 pages plus paid extra
   pages. To shorten the paper, merge Tables I–II, move Fig. 6 (SSP frame) and
   Table III into the text, and drop Fig. 4 (FEA) or Fig. 11 (odometry).
