@@ -25,7 +25,11 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 PROJ = os.path.dirname(ROOT)
+# 2023 material: the untouched sibling folder when present, otherwise the copy
+# in original_2023/ (where navigation.mp4 and sensor.mp4 are 1080p re-encodes)
 DOC = os.path.join(PROJ, "Space Exploration Rover", "Documentation")
+if not os.path.isdir(DOC):
+    DOC = os.path.join(ROOT, "original_2023", "Documentation")
 FIG = os.path.join(ROOT, "paper", "figures")
 OUT_FIG = os.path.join(ROOT, "analysis", "out")
 ASSETS = os.path.join(HERE, "assets")

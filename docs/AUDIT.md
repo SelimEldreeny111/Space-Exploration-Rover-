@@ -1,6 +1,7 @@
 # Technical audit of the 2023 MISSION X project
 
-This audit reviewed every artefact in `Space Exploration Rover/`: the final
+This audit reviewed every artefact in `Space Exploration Rover/` (the team's
+own files from that folder are in this repository under `original_2023/`): the final
 report (`space rover.docx`, 166 figures), the subsystem reports, the
 presentations, the Arduino code, the Python SSP script, the LabVIEW VIs, the
 videos and the CAD inventory. Each finding below states the evidence, its impact

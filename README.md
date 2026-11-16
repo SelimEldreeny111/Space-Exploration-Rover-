@@ -6,11 +6,19 @@ Beni-Suef University, built with the Egyptian Space Agency (EgSA). It is a
 environmental payload, a 6-DOF sampling arm, solar power and a 433 MHz ground
 link.
 
-This repository holds everything produced in the 2026 upgrade. The original
-2023 material (reports, CAD, presentation videos) is not in this repository:
-it is about 1.8 GB and several files exceed GitHub's 100 MB limit. The scripts
-expect it in a sibling folder, `../Space Exploration Rover/`, and they never
-modify it.
+This repository holds everything produced in the 2026 upgrade. It also holds
+the team's original 2023 project files in `original_2023/`: reports,
+presentations, Arduino and Python code, the LabVIEW ground station, the
+Altium power board, SolidWorks CAD and the demo videos. Two changes were
+needed to fit GitHub's 100 MB file limit:
+
+- the demo videos and the video embedded in the final presentation were
+  re-encoded (the 4K clips to 1080p);
+- downloaded third-party CAD models were left out.
+
+`original_2023/README.md` lists every change. The scripts read the 2023
+material from a sibling folder, `../Space Exploration Rover/`, if one exists,
+and otherwise from `original_2023/`. They never modify it.
 
 | Deliverable | Where | Status |
 |-------------|-------|--------|
@@ -22,6 +30,7 @@ modify it.
 | **Interface Control Document v2.0** | `docs/ICD.md` | Wire-compatible with the 2023 LabVIEW ground station |
 | **Audit of the 2023 project** | `docs/AUDIT.md` | — |
 | **Analysis scripts** behind every number and figure in the paper | `analysis/` | Reproducible (see below) |
+| **Original 2023 project files** (team's own) | `original_2023/`, index and change list in `original_2023/README.md` | As submitted, except 5 re-encoded media files; third-party CAD left out |
 
 ## Key results (paper §IV–VIII)
 
@@ -55,7 +64,10 @@ MissionX-Rover/
 ├── ground_station/   web/ (open index.html in Chrome/Edge), python/, tools/
 ├── analysis/         mobility, power, comms, sim_* studies, compose_photos, style
 ├── docker/           headless simulation + evaluation (ROS 2 Jazzy)
-└── docs/             ICD.md, ROS2.md, AUDIT.md
+├── docs/             ICD.md, ROS2.md, AUDIT.md
+└── original_2023/    the 2023 project as submitted: Documentation/ (book, presentation,
+                      videos, photos) and Space Exploration Rover/ (subsystem reports,
+                      code, LabVIEW, Altium, SolidWorks)
 ```
 
 ## Reproduce
@@ -81,7 +93,8 @@ cd paper && latexmk -pdf -outdir=build main.tex
 ```
 
 ```bash
-# video: first extract the raw media from the 2023 folder, then render
+# video: first extract the presentation media (from ../Space Exploration Rover/
+# when present, otherwise from original_2023/), then render
 # (about 15 min at 1080p; --ar for the Arabic edition, --preview for a quick 540p version)
 cd video && python extract_assets.py && python make_video.py
 ```

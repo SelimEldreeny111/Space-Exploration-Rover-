@@ -8,7 +8,7 @@ firmware/build/
 paper/build/
 video/build/
 video/*_preview.mp4
-# raw media extracted from the 2023 project (large; some third-party) - see video/extract_assets.py
+# media extracted from the 2023 presentation by video/extract_assets.py (copies of files in original_2023/)
 video/assets/
 ros2_ws/build/
 ros2_ws/install/

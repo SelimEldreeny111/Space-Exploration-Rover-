@@ -1,15 +1,16 @@
-"""Re-create video/assets/ from the original 2023 project folder.
+"""Re-create video/assets/ from the original 2023 project files.
 
-The raw media are not stored in the repository: they are large, and the 2023
+video/assets/ is not committed: it only holds copies of media that are inside
+the 2023 presentation. Only the team's own files below are extracted. The
 presentation also contains third-party material (a Perseverance animation,
-stock photos, a newspaper clipping) that must not be redistributed and that
-the video does not use. Only the team's own files below are extracted.
+web images) that the video does not use.
 
-Usage:  python extract_assets.py "<path to 'Space Exploration Rover' folder>"
-        (default: ../../Space Exploration Rover, i.e. the original layout)
+Usage:  python extract_assets.py ["<path to the 2023 'Space Exploration Rover' folder>"]
+        default: ../../Space Exploration Rover (the original layout) when it
+        exists, otherwise ../original_2023 (the copy in this repository)
 
 make_video.py additionally reads Documentation/final presentation/
-navigation.mp4 and sensor.mp4 directly from that folder.
+navigation.mp4 and sensor.mp4 directly from the default folder.
 """
 from __future__ import annotations
 
@@ -20,6 +21,8 @@ import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(os.path.dirname(os.path.dirname(HERE)), "Space Exploration Rover")
+if not os.path.isdir(DEFAULT):
+    DEFAULT = os.path.join(os.path.dirname(HERE), "original_2023")
 
 # file inside "All in One.pptx" -> name used by make_video.py
 FROM_PPTX = {
