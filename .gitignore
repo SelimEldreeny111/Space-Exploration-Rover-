@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# build outputs
+firmware/build/
+paper/build/
+video/build/
+video/*_preview.mp4
+# raw media extracted from the 2023 project (large; some third-party) - see video/extract_assets.py
+video/assets/
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
