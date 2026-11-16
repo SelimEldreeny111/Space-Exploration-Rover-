@@ -1,0 +1,50 @@
+# MISSION X rover - ROS 2 Jazzy simulation stack.
+#
+#   docker compose -f docker/docker-compose.yml build
+#   docker compose -f docker/docker-compose.yml up sim-slam     # sim + EKF + slam_toolbox
+#   docker compose -f docker/docker-compose.yml up sim-nav      # sim + EKF + AMCL + Nav2
+#   docker compose -f docker/docker-compose.yml run --rm eval   # headless exploration run
+#
+# sim-slam / sim-nav use host networking (Linux) so RViz / ros2 CLI on the host
+# (ROS_DOMAIN_ID=42) can see them. `eval` is isolated and writes its results to
+# docker/eval_output/run_<timestamp>/.
+name: missionx-rover
+
+x-rover: &rover
+  image: missionx/rover-ros2:jazzy
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+  init: true
+  stop_signal: SIGINT
+  stop_grace_period: 30s
+
+x-host-ros: &host-ros
+  network_mode: host
+  ipc: host                  # Fast DDS shared-memory transport with host tools
+  environment:
+    ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+    RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+
+services:
+  sim-slam:
+    <<: [*rover, *host-ros]
+    command: ros2 launch rover_bringup sim.launch.py slam:=true rviz:=false
+
+  sim-nav:
+    <<: [*rover, *host-ros]
+    command: ros2 launch rover_bringup sim.launch.py nav:=true rviz:=false
+
+  eval:
+    <<: *rover
+    command: /ws/scripts/run_sim_eval.sh
+    environment:
+      ROS_DOMAIN_ID: 77
+      ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      EVAL_DURATION: ${EVAL_DURATION:-900}
+      EVAL_RTF: ${EVAL_RTF:-1.0}
+      EVAL_SEED: ${EVAL_SEED:-0}
+      EVAL_OUTPUT: /eval_output
+    volumes:
+      - ./eval_output:/eval_output

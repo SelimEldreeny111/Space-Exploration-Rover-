@@ -1,0 +1,22 @@
+# Frontier-based exploration (rover_mission/explorer).
+explorer:
+  ros__parameters:
+    map_topic: map
+    map_frame: map
+    base_frame: base_footprint
+    navigate_action: navigate_to_pose
+    autostart: false             # true: start without waiting for /rover/mode == AUTONOMOUS
+    planning_period_s: 2.0
+    goal_timeout_s: 120.0        # cancel + blacklist goals that take longer
+    replan_radius: 0.5           # re-plan when no frontier remains this close to the target
+    no_frontier_patience: 3      # planning cycles without frontiers before COMPLETE
+    return_to_start: true        # drive back to the map origin (start pose) when done
+    # frontier detection / selection (rover_mission/frontiers.py)
+    free_thresh: 25
+    occ_thresh: 65
+    min_frontier_size: 8         # cells (0.4 m at 0.05 m/cell)
+    clearance: 0.45              # m from obstacles (rover half-width 0.365 + margin)
+    w_distance: 1.0              # cost = w_distance * distance - w_size * length
+    w_size: 0.5
+    min_goal_distance: 0.5
+    blacklist_radius: 0.6

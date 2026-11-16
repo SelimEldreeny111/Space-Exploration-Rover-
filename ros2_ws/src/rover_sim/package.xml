@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rover_sim</name>
+  <version>2.0.0</version>
+  <description>Lightweight 2.5-D simulator node for the MISSION X rover (wraps rover_core.sim): publishes /scan, /wheel/odom, /imu/data, /ultrasonic/*, /ground_truth/odom and /clock so that the EKF, slam_toolbox and Nav2 run unchanged. Ships the lab world (with low obstacles invisible to the LiDAR).</description>
+  <maintainer email="missionx.rover@example.com">MISSION X Team</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rover_core</exec_depend>
+  <exec_depend>rover_hardware</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>builtin_interfaces</exec_depend>
+  <exec_depend>rosgraph_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

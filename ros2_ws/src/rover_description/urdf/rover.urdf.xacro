@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<!--
+  MISSION X six-wheel rocker-bogie rover (ICD v2.0 section 9).
+
+  Frames (REP-103 / REP-105):
+    base_footprint  ground projection of the body centre (EKF child frame)
+    base_link       body centre at wheel-axle height (z = wheel_radius)
+    laser_link      LDS-01 optical plane, ~0.62 m above the ground
+    imu_link, camera_link (+ camera_optical_link), us_<name>_link (x6)
+
+  The left and right rockers are coupled by the differential pivot of the
+  real rover: right_rocker_joint mimics left_rocker_joint with multiplier -1.
+  Every dimension is a xacro argument, e.g.
+    xacro rover.urdf.xacro track:=0.60 lidar_height:=0.64
+  Geometry is primitive (no meshes); masses add up to ~36.5 kg.
+-->
+<robot name="missionx_rover" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================================================== arguments -->
+  <xacro:arg name="wheel_radius"        default="0.100"/>
+  <xacro:arg name="wheel_width"         default="0.050"/>
+  <xacro:arg name="wheelbase"           default="0.82"/>   <!-- front-rear axle distance -->
+  <xacro:arg name="track"               default="0.58"/>   <!-- left-right drive-wheel centres -->
+  <xacro:arg name="twin_offset"         default="0.050"/>  <!-- passive twin wheel, outboard -->
+  <xacro:arg name="rocker_y"            default="0.22"/>   <!-- rocker beam plane -->
+  <xacro:arg name="rocker_pivot_x"      default="0.0"/>
+  <xacro:arg name="rocker_pivot_height" default="0.33"/>   <!-- above ground -->
+  <xacro:arg name="bogie_pivot_height"  default="0.20"/>   <!-- above ground -->
+  <xacro:arg name="body_length"         default="0.60"/>
+  <xacro:arg name="body_width"          default="0.36"/>
+  <xacro:arg name="body_height"         default="0.16"/>
+  <xacro:arg name="body_bottom"         default="0.33"/>   <!-- above ground -->
+  <xacro:arg name="lidar_x"             default="0.05"/>   <!-- matches rover_core.sim lidar_offset -->
+  <xacro:arg name="lidar_height"        default="0.62"/>   <!-- above ground -->
+  <xacro:arg name="ultrasonic_height"   default="0.25"/>   <!-- above ground -->
+  <xacro:arg name="panel_tilt_deg"      default="30.0"/>
+  <xacro:arg name="camera_x"            default="0.28"/>
+  <xacro:arg name="camera_height"       default="0.56"/>   <!-- above ground -->
+  <xacro:arg name="camera_pitch_deg"    default="10.0"/>   <!-- positive = looking down -->
+  <xacro:arg name="mass_total"          default="36.5"/>
+
+  <!-- ===================================================== properties -->
+  <xacro:property name="wr"    value="$(arg wheel_radius)"/>
+  <xacro:property name="ww"    value="$(arg wheel_width)"/>
+  <xacro:property name="wb"    value="$(arg wheelbase)"/>
+  <xacro:property name="trk"   value="$(arg track)"/>
+  <xacro:property name="twin"  value="$(arg twin_offset)"/>
+  <xacro:property name="ry"    value="$(arg rocker_y)"/>
+  <xacro:property name="rpx"   value="$(arg rocker_pivot_x)"/>
+  <xacro:property name="rpz"   value="$(arg rocker_pivot_height)"/>
+  <xacro:property name="bpz"   value="$(arg bogie_pivot_height)"/>
+  <xacro:property name="bl"    value="$(arg body_length)"/>
+  <xacro:property name="bw"    value="$(arg body_width)"/>
+  <xacro:property name="bh"    value="$(arg body_height)"/>
+  <xacro:property name="bb"    value="$(arg body_bottom)"/>
+  <xacro:property name="lx"    value="$(arg lidar_x)"/>
+  <xacro:property name="lz"    value="$(arg lidar_height)"/>
+  <xacro:property name="uz"    value="$(arg ultrasonic_height)"/>
+  <xacro:property name="tilt"  value="${radians($(arg panel_tilt_deg))}"/>
+  <xacro:property name="cx"    value="$(arg camera_x)"/>
+  <xacro:property name="cz"    value="$(arg camera_height)"/>
+  <xacro:property name="cpit"  value="${radians($(arg camera_pitch_deg))}"/>
+  <xacro:property name="mtot"  value="$(arg mass_total)"/>
+
+  <!-- derived -->
+  <xacro:property name="base_z"   value="${wr}"/>                 <!-- base_link above ground -->
+  <xacro:property name="body_top" value="${bb + bh}"/>
+  <xacro:property name="wy"       value="${trk / 2.0 - ry}"/>     <!-- wheel offset from rocker plane -->
+  <xacro:property name="bogie_x"  value="${-wb / 4.0}"/>          <!-- bogie pivot (between mid and rear) -->
+  <!-- mass split: wheels 6 x 1.0, twins 6 x 0.4, rockers 2 x 1.5, bogies 2 x 1.0,
+       panel 1.0, mast+lidar 0.7, camera 0.1, ultrasonics 0.3, arm mount 0.3,
+       body = remainder -->
+  <xacro:property name="m_wheel"  value="1.0"/>
+  <xacro:property name="m_twin"   value="0.4"/>
+  <xacro:property name="m_rocker" value="1.5"/>
+  <xacro:property name="m_bogie"  value="1.0"/>
+  <xacro:property name="m_body"   value="${mtot - 6*m_wheel - 6*m_twin - 2*m_rocker - 2*m_bogie - 1.0 - 0.7 - 0.1 - 0.3 - 0.3}"/>
+
+  <!-- ===================================================== materials -->
+  <material name="white"><color rgba="0.92 0.92 0.92 1.0"/></material>
+  <material name="grey"><color rgba="0.55 0.55 0.58 1.0"/></material>
+  <material name="dark"><color rgba="0.12 0.12 0.12 1.0"/></material>
+  <material name="orange"><color rgba="0.95 0.45 0.10 1.0"/></material>
+  <material name="blue"><color rgba="0.10 0.20 0.55 1.0"/></material>
+  <material name="green"><color rgba="0.10 0.65 0.25 1.0"/></material>
+
+  <!-- ===================================================== macros -->
+  <xacro:macro name="box_inertial" params="m x y z *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y + z*z)/12.0}" ixy="0" ixz="0"
+               iyy="${m*(x*x + z*z)/12.0}" iyz="0"
+               izz="${m*(x*x + y*y)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- solid cylinder whose axis is the link's y axis (wheels) -->
+  <xacro:macro name="wheel_inertial" params="m r l">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r + l*l)/12.0}" ixy="0" ixz="0"
+               iyy="${m*r*r/2.0}" iyz="0"
+               izz="${m*(3*r*r + l*l)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- straight beam (box) in the link's x-z plane from (x1,z1) to (x2,z2) -->
+  <xacro:macro name="beam" params="x1 z1 x2 z2 t">
+    <visual>
+      <origin xyz="${(x1 + x2)/2.0} 0 ${(z1 + z2)/2.0}" rpy="0 ${atan2(-(z2 - z1), x2 - x1)} 0"/>
+      <geometry><box size="${sqrt((x2 - x1)**2 + (z2 - z1)**2)} ${t} ${t}"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </xacro:macro>
+
+  <!-- drive wheel + passive twin wheel. side: 1 = left, -1 = right -->
+  <xacro:macro name="wheel" params="name parent side x z">
+    <link name="${name}_wheel_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wr}" length="${ww}"/></geometry>
+        <material name="dark"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wr}" length="${ww}"/></geometry>
+      </collision>
+      <xacro:wheel_inertial m="${m_wheel}" r="${wr}" l="${ww}"/>
+    </link>
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="${parent}"/>
+      <child link="${name}_wheel_link"/>
+      <origin xyz="${x} ${side*wy} ${z}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="3.0" velocity="8.7"/>
+    </joint>
+    <link name="${name}_twin_wheel_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wr}" length="${ww*0.8}"/></geometry>
+        <material name="grey"/>
+      </visual>
+      <xacro:wheel_inertial m="${m_twin}" r="${wr}" l="${ww*0.8}"/>
+    </link>
+    <!-- the passive twin rolls on the same axle: rigid w.r.t. the drive wheel -->
+    <joint name="${name}_twin_wheel_joint" type="fixed">
+      <parent link="${name}_wheel_link"/>
+      <child link="${name}_twin_wheel_link"/>
+      <origin xyz="0 ${side*twin} 0" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- rocker (front wheel + bogie) of one side -->
+  <xacro:macro name="rocker_side" params="prefix side">
+    <link name="${prefix}_rocker_link">
+      <!-- front leg to the front axle, rear leg to the bogie pivot -->
+      <xacro:beam x1="0" z1="0" x2="${wb/2.0 - rpx}" z2="${wr - rpz}" t="0.03"/>
+      <xacro:beam x1="0" z1="0" x2="${bogie_x - rpx}" z2="${bpz - rpz}" t="0.03"/>
+      <xacro:box_inertial m="${m_rocker}" x="0.6" y="0.03" z="0.1">
+        <origin xyz="0.1 0 -0.1" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+    <link name="${prefix}_bogie_link">
+      <xacro:beam x1="0" z1="0" x2="${wb/4.0}" z2="${wr - bpz}" t="0.03"/>
+      <xacro:beam x1="0" z1="0" x2="${-wb/4.0}" z2="${wr - bpz}" t="0.03"/>
+      <xacro:box_inertial m="${m_bogie}" x="0.4" y="0.03" z="0.05">
+        <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+    <joint name="${prefix}_bogie_joint" type="revolute">
+      <parent link="${prefix}_rocker_link"/>
+      <child link="${prefix}_bogie_link"/>
+      <origin xyz="${bogie_x - rpx} 0 ${bpz - rpz}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-0.6" upper="0.6" effort="100.0" velocity="2.0"/>
+    </joint>
+    <xacro:wheel name="${prefix}_front" parent="${prefix}_rocker_link" side="${side}"
+                 x="${wb/2.0 - rpx}" z="${wr - rpz}"/>
+    <xacro:wheel name="${prefix}_mid" parent="${prefix}_bogie_link" side="${side}"
+                 x="${0.0 - bogie_x}" z="${wr - bpz}"/>
+    <xacro:wheel name="${prefix}_rear" parent="${prefix}_bogie_link" side="${side}"
+                 x="${-wb/2.0 - bogie_x}" z="${wr - bpz}"/>
+  </xacro:macro>
+
+  <!-- HC-SR04 ultrasonic frame (ICD section 9.3): x, y in base_link, yaw in degrees -->
+  <xacro:macro name="ultrasonic" params="name x y yaw">
+    <link name="us_${name}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><box size="0.02 0.045 0.02"/></geometry>
+        <material name="blue"/>
+      </visual>
+      <xacro:box_inertial m="0.05" x="0.02" y="0.045" z="0.02">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+    <joint name="us_${name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="us_${name}_link"/>
+      <origin xyz="${x} ${y} ${uz - base_z}" rpy="0 0 ${radians(yaw)}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- ===================================================== base -->
+  <link name="base_footprint"/>
+
+  <link name="base_link"/>
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${base_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Warm Electronics Box (WEB) -->
+  <link name="chassis_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="${bl} ${bw} ${bh}"/></geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="${bl} ${bw} ${bh}"/></geometry>
+    </collision>
+    <xacro:box_inertial m="${m_body}" x="${bl}" y="${bw}" z="${bh}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+  <joint name="chassis_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis_link"/>
+    <origin xyz="0 0 ${bb + bh/2.0 - base_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===================================================== rocker-bogie -->
+  <joint name="left_rocker_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="left_rocker_link"/>
+    <origin xyz="${rpx} ${ry} ${rpz - base_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.35" upper="0.35" effort="100.0" velocity="1.0"/>
+  </joint>
+  <!-- differential pivot: the right rocker turns opposite to the left one -->
+  <joint name="right_rocker_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="right_rocker_link"/>
+    <origin xyz="${rpx} ${-ry} ${rpz - base_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.35" upper="0.35" effort="100.0" velocity="1.0"/>
+    <mimic joint="left_rocker_joint" multiplier="-1.0" offset="0.0"/>
+  </joint>
+  <xacro:rocker_side prefix="left" side="1"/>
+  <xacro:rocker_side prefix="right" side="-1"/>
+
+  <!-- ===================================================== solar panel (30 deg) -->
+  <link name="solar_panel_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.24 0.34 0.01"/></geometry>
+      <material name="blue"/>
+    </visual>
+    <xacro:box_inertial m="1.0" x="0.24" y="0.34" z="0.01">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+  <joint name="solar_panel_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="solar_panel_link"/>
+    <!-- rests on the rear half of the WEB lid; top edge stays below the LiDAR plane -->
+    <origin xyz="-0.15 0 ${body_top + 0.12*sin(tilt) + 0.005 - base_z}" rpy="0 ${-tilt} 0"/>
+  </joint>
+
+  <!-- ===================================================== LiDAR mast + LDS-01 -->
+  <link name="lidar_mast_link">
+    <visual>
+      <origin xyz="0 0 ${(lz - 0.03 - body_top)/2.0}" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.015" length="${lz - 0.03 - body_top}"/></geometry>
+      <material name="grey"/>
+    </visual>
+    <xacro:box_inertial m="0.5" x="0.03" y="0.03" z="${lz - body_top}">
+      <origin xyz="0 0 ${(lz - body_top)/2.0}" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+  <joint name="lidar_mast_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_mast_link"/>
+    <origin xyz="${lx} 0 ${body_top - base_z}" rpy="0 0 0"/>
+  </joint>
+  <link name="laser_link">
+    <visual>
+      <origin xyz="0 0 -0.008" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.04"/></geometry>
+      <material name="dark"/>
+    </visual>
+    <xacro:box_inertial m="0.2" x="0.07" y="0.07" z="0.04">
+      <origin xyz="0 0 -0.008" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser_link"/>
+    <origin xyz="${lx} 0 ${lz - base_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===================================================== IMU (MPU-6050 on the payload Uno) -->
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 ${bb + 0.02 - base_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===================================================== camera -->
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.03 0.08 0.03"/></geometry>
+      <material name="dark"/>
+    </visual>
+    <xacro:box_inertial m="0.1" x="0.03" y="0.08" z="0.03">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${cx} 0 ${cz - base_z}" rpy="0 ${cpit} 0"/>
+  </joint>
+  <link name="camera_optical_link"/>
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_link"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- ===================================================== arm mount (arm not modelled) -->
+  <link name="arm_base_link">
+    <visual>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="0.04"/></geometry>
+      <material name="orange"/>
+    </visual>
+    <xacro:box_inertial m="0.3" x="0.08" y="0.08" z="0.04">
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+  <joint name="arm_base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_base_link"/>
+    <origin xyz="0.18 -0.11 ${body_top - base_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===================================================== ultrasonic sensors (ICD 9.3) -->
+  <xacro:ultrasonic name="front_left"   x="0.50"  y="0.18"  yaw="30.0"/>
+  <xacro:ultrasonic name="front_center" x="0.52"  y="0.0"   yaw="0.0"/>
+  <xacro:ultrasonic name="front_right"  x="0.50"  y="-0.18" yaw="-30.0"/>
+  <xacro:ultrasonic name="left"         x="0.10"  y="0.33"  yaw="90.0"/>
+  <xacro:ultrasonic name="right"        x="0.10"  y="-0.33" yaw="-90.0"/>
+  <xacro:ultrasonic name="rear"         x="-0.50" y="0.0"   yaw="180.0"/>
+
+</robot>

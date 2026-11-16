@@ -1,0 +1,80 @@
+# MISSION X serial bridges (ICD v2.0). Device names come from
+# rover_bringup/config/99-missionx-rover.rules. Keep float values as floats
+# (e.g. 0.10, not 0) - rclpy rejects parameter type changes.
+
+mobility_bridge:
+  ros__parameters:
+    port: /dev/rover_mobility
+    baud: 115200
+    transparency: false
+    inter_byte_timeout_s: 0.02
+    # geometry / drive train (ICD section 9; calibrate skid_chi on site)
+    wheel_radius: 0.100
+    track: 0.58
+    wheelbase: 0.82
+    skid_chi: 1.5
+    counts_per_wheel_rev: 840
+    max_speed: 0.45          # m/s, hard software limit (Nav2 uses 0.40)
+    max_yaw_rate: 1.0        # rad/s
+    # velocity command
+    cmd_rate_hz: 10.0        # SET_VELOCITY refresh (>= 10 Hz)
+    mcu_timeout_ms: 500      # MCU stops if not refreshed within this time
+    cmd_vel_timeout_s: 0.5   # stale /cmd_vel -> zero
+    use_stamped_cmd_vel: false
+    # odometry
+    publish_tf: false        # robot_localization EKF publishes odom -> base_footprint
+    odom_frame: odom
+    base_frame: base_footprint
+    publish_joint_states: true
+    # ultrasonic (HC-SR04)
+    ultrasonic_fov_deg: 15.0
+    ultrasonic_min_range: 0.02
+    ultrasonic_max_range: 4.0
+    no_echo_as_max_range: false   # true: publish max_range instead of +inf (Nav2 range layer clearing)
+
+payload_bridge:
+  ros__parameters:
+    port: /dev/rover_payload
+    baud: 115200
+    transparency: false
+    inter_byte_timeout_s: 0.02
+    env_frame: base_link
+    imu_frame: imu_link
+    orientation_variance: 0.0003        # (1 deg)^2
+    yaw_variance: 1000.0                # yaw not measured
+    angular_velocity_variance: 0.0004
+    linear_acceleration_variance: 0.01
+    temperature_variance: 4.0
+    humidity_variance: 0.0025
+    pressure_variance: 10000.0
+
+arm_bridge:
+  ros__parameters:
+    port: /dev/rover_arm
+    baud: 115200
+    transparency: false
+    inter_byte_timeout_s: 0.02
+
+ground_station_bridge:
+  ros__parameters:
+    port: /dev/rover_radio
+    baud: 9600
+    own_address: 1
+    transparency: false
+    inter_byte_timeout_s: 0.05
+    drive_max_speed: 0.4
+    drive_max_yaw_rate: 0.8
+    drive_rate_hz: 10.0
+    map_frame: map
+    base_frame: base_link
+    image_topic: camera/image_raw
+    image_chunk_gap_s: 0.02
+    v2_image_width: 160
+    v2_image_height: 120
+    # COLLECT_OBJECT: ArmCommand pose ids (ArmCommand.POSE_*) and hold times
+    # READY, GRIP_OPEN, REACH_GROUND, GRIP_CLOSE, LIFT_SAMPLE, DEPOSIT, GRIP_OPEN, STOW
+    collect_poses: [2, 4, 3, 5, 6, 7, 4, 1]
+    collect_hold_s: [2.0, 1.0, 2.5, 1.5, 2.5, 2.5, 1.0, 2.0]
+    mode_publish_period_s: 1.0
+    initial_mode: 0
+    navigate_action: navigate_to_pose

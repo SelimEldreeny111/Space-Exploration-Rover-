@@ -1,0 +1,43 @@
+# MISSION X rover - persistent serial device names (ICD v2.0 section 1)
+#
+#   /dev/rover_mobility  Arduino Mega 2560 (mobility MCU, 115200)
+#   /dev/rover_payload   Arduino Uno (payload MCU, 115200)
+#   /dev/rover_arm       Arduino Uno + PCA9685 (arm MCU, 115200)
+#   /dev/rover_lidar     ROBOTIS LDS-01 via USB2LDS (CP2102, 230400)
+#   /dev/rover_radio     HC-12 433 MHz radio via USB-UART (9600)
+#
+# INSTALL
+#   1. Plug in ONE device at a time and read its identifiers:
+#        udevadm info -a -n /dev/ttyACM0 | grep -E 'ATTRS\{(idVendor|idProduct|serial)\}' | head -3
+#        udevadm info -a -n /dev/ttyUSB0 | grep -E 'ATTRS\{(idVendor|idProduct|serial)\}' | head -3
+#   2. Replace every REPLACE_WITH_* placeholder below with the serial number
+#      (and fix idVendor/idProduct if your boards differ: genuine Arduino Mega
+#      2560 R3 = 2341:0042, Uno R3 = 2341:0043; CH340 clones = 1a86:7523;
+#      CP2102 = 10c4:ea60; FT232R = 0403:6001).
+#   3. sudo cp 99-missionx-rover.rules /etc/udev/rules.d/
+#      sudo udevadm control --reload-rules && sudo udevadm trigger
+#      ls -l /dev/rover_*
+#   4. Make sure the user is in the dialout group: sudo usermod -aG dialout $USER
+#
+# CH340 clones have NO unique serial number. For those, match the physical USB
+# port instead (stable as long as the cable stays in the same Pi port):
+#   udevadm info -q path -n /dev/ttyUSB0   ->  .../usb1/1-1/1-1.3/1-1.3:1.0/...
+#   SUBSYSTEM=="tty", KERNELS=="1-1.3:1.0", SYMLINK+="rover_payload", GROUP="dialout", MODE="0660"
+#
+# ENV{ID_MM_DEVICE_IGNORE}="1" keeps ModemManager from probing the Arduinos
+# (it sends AT commands and resets the boards right after enumeration).
+
+# --- mobility: Arduino Mega 2560 ------------------------------------------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="REPLACE_WITH_MEGA_SERIAL", SYMLINK+="rover_mobility", GROUP="dialout", MODE="0660", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# --- payload: Arduino Uno ----------------------------------------------------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", ATTRS{serial}=="REPLACE_WITH_PAYLOAD_UNO_SERIAL", SYMLINK+="rover_payload", GROUP="dialout", MODE="0660", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# --- arm: Arduino Uno + PCA9685 ------------------------------------------------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", ATTRS{serial}=="REPLACE_WITH_ARM_UNO_SERIAL", SYMLINK+="rover_arm", GROUP="dialout", MODE="0660", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# --- LiDAR: LDS-01 through the USB2LDS board (CP2102) --------------------------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="REPLACE_WITH_USB2LDS_SERIAL", SYMLINK+="rover_lidar", GROUP="dialout", MODE="0660", ENV{ID_MM_DEVICE_IGNORE}="1"
+
+# --- radio: HC-12 through a USB-UART adapter (example: FTDI FT232R) ------------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="REPLACE_WITH_RADIO_ADAPTER_SERIAL", SYMLINK+="rover_radio", GROUP="dialout", MODE="0660", ENV{ID_MM_DEVICE_IGNORE}="1"

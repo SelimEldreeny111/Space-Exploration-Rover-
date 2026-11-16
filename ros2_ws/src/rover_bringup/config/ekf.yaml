@@ -1,0 +1,53 @@
+# robot_localization EKF (ekf_node, node name ekf_filter_node).
+# Fuses the skid-steer wheel odometry and the MPU-6050 (payload MCU):
+#   /wheel/odom : vx, vy (= 0, non-holonomic constraint), vyaw
+#   /imu/data   : roll, pitch (complementary filter), vyaw (gyro)
+# -> /odometry/filtered and TF odom -> base_footprint.
+# two_d_mode is false so the rocker-bogie's roll/pitch on uneven ground is
+# kept (Nav2 only uses x, y, yaw). The IMU yaw is not fused (no magnetometer).
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.2
+    two_d_mode: false
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: true
+    debug: false
+    publish_tf: true
+    publish_acceleration: false
+    reset_on_time_jump: true          # simulator restarts
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    odom0: /wheel/odom
+    #             x      y      z      roll   pitch  yaw
+    #             vx     vy     vz     vroll  vpitch vyaw
+    #             ax     ay     az
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  true,  false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_nodelay: false
+    odom0_differential: false
+    odom0_relative: false
+
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  true,  true,  false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+    imu0_queue_size: 25
+    imu0_nodelay: false
+    imu0_differential: false
+    imu0_relative: false
+    imu0_remove_gravitational_acceleration: true
+
+    use_control: false
+    # process_noise_covariance / initial_estimate_covariance: robot_localization defaults

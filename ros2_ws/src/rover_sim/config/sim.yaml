@@ -1,0 +1,31 @@
+# rover_sim_node parameters. `world` may be an absolute path, a file in
+# rover_sim/worlds (e.g. "lab" or "lab.yaml") or "" for World.default_lab().
+rover_sim:
+  ros__parameters:
+    world: lab.yaml
+    seed: 0
+    noise: true
+    rate_hz: 50.0              # physics + /clock rate (sim time)
+    real_time_factor: 1.0      # >1 runs faster than real time (if the CPU allows)
+    publish_clock: true        # stamp with sim time and publish /clock
+    scan_rate_hz: 5.0          # LDS-01
+    odom_rate_hz: 20.0         # WHEEL_ODOM
+    imu_rate_hz: 25.0          # IMU
+    ultrasonic_rate_hz: 10.0   # RANGES
+    ground_truth_rate_hz: 20.0
+    laser_frame: laser_link
+    imu_frame: imu_link
+    odom_frame: odom
+    base_frame: base_footprint
+    world_frame: world
+    map_frame: map
+    publish_world_tf: true     # static world -> map at the start pose
+    publish_odom_tf: false     # the EKF publishes odom -> base_footprint
+    cmd_vel_timeout_s: 0.5     # emulates the mobility MCU watchdog
+    use_stamped_cmd_vel: false
+    no_echo_as_max_range: false
+    skid_chi: 1.5              # odometry model (the simulated rover slips ~8 % more)
+    orientation_variance: 0.0003
+    yaw_variance: 1000.0
+    angular_velocity_variance: 0.0004
+    linear_acceleration_variance: 0.01

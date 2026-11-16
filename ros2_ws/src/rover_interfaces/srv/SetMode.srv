@@ -1,0 +1,12 @@
+# Change the rover operating mode (served by ground_station_bridge on /rover/set_mode).
+# Equivalent of the SSP SET_MODE (0x53) command.
+uint8 MODE_IDLE=0
+uint8 MODE_TELEOP=1
+uint8 MODE_AUTONOMOUS=2
+uint8 MODE_SAFE=3
+
+uint8 mode
+---
+bool success
+string message
+uint8 mode                   # mode in effect after the call
