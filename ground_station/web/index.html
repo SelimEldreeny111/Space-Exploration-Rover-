@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="MISSION X rover ground station: SSP over Web Serial (HC-12 radio) with a built-in virtual rover.">
+<title>MISSION X Ground Station</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161b22'/%3E%3Cpath d='M7 20h18l-3-7H10z' fill='none' stroke='%233987e5' stroke-width='2.2' stroke-linejoin='round'/%3E%3Ccircle cx='10' cy='23' r='2.6' fill='%23e8edf2'/%3E%3Ccircle cx='16' cy='23' r='2.6' fill='%23e8edf2'/%3E%3Ccircle cx='22' cy='23' r='2.6' fill='%23e8edf2'/%3E%3Cpath d='M16 13V7l5 2' fill='none' stroke='%23e8edf2' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/gs.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to dashboard</a>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 20h18l-3-7H10z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="10" cy="23" r="2.6"/><circle cx="16" cy="23" r="2.6"/><circle cx="22" cy="23" r="2.6"/><path d="M16 13V7l5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <div class="brand-text"><strong>MISSION X</strong><span>Ground Station · ICD v2.0</span></div>
+  </div>
+  <div class="status-strip" aria-label="Rover status">
+    <span id="linkPill" class="pill" data-state="off"><span class="dot" aria-hidden="true"></span><span id="linkText">Offline</span></span>
+    <span id="modePill" class="pill pill-mode" title="Rover mode (from telemetry)"><span class="pill-k">Mode</span><span id="modeText">—</span></span>
+    <span id="faultPills" class="faults" aria-label="Fault flags"></span>
+  </div>
+  <div class="clock" aria-label="UTC time"><span id="utcClock">--:--:--</span><small>UTC</small></div>
+  <button id="helpBtn" class="icon-btn" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button>
+  <button id="estopBtn" class="estop" type="button" aria-keyshortcuts="Space" title="Emergency stop (Space)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8l6 6v8l-6 6H8l-6-6V8z" fill="currentColor" opacity=".25"/><path d="M8 2h8l6 6v8l-6 6H8l-6-6V8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12h10" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <span>E-STOP</span><kbd>Space</kbd>
+  </button>
+</header>
+
+<main id="main" class="layout">
+  <!-- ======================================================== left column -->
+  <div class="col col-left">
+    <section class="panel" id="panelLink" aria-labelledby="hLink">
+      <header class="panel-h"><h2 id="hLink">Link</h2><span id="linkMeta" class="meta">offline</span></header>
+      <div class="seg" role="radiogroup" aria-label="Link source" id="srcSeg">
+        <button type="button" role="radio" aria-checked="false" data-src="serial">Web Serial</button>
+        <button type="button" role="radio" aria-checked="true" data-src="virtual">Virtual rover</button>
+      </div>
+      <div class="fields">
+        <label class="field"><span>Baud</span>
+          <select id="baud">
+            <option>1200</option><option>2400</option><option>4800</option><option selected>9600</option>
+            <option>19200</option><option>38400</option><option>57600</option><option>115200</option>
+          </select></label>
+        <label class="field virt"><span>Rover</span>
+          <select id="vProfile">
+            <option value="v2" selected>v2 Brain · 56 B TLM</option>
+            <option value="legacy">2023 rover · 7 B TLM</option>
+            <option value="safe">Mega safe-mode link</option>
+          </select></label>
+        <label class="field virt"><span>Bit errors</span>
+          <select id="vBer">
+            <option value="0">none</option>
+            <option value="1e-5" selected>1e-5 · occasional</option>
+            <option value="1e-4">1e-4 · noisy</option>
+            <option value="1e-3">1e-3 · poor link</option>
+          </select></label>
+      </div>
+      <details class="adv">
+        <summary>Advanced</summary>
+        <div class="fields">
+          <label class="field"><span>Destination</span>
+            <select id="destSel">
+              <option value="1" selected>0x01 Rover / Brain</option><option value="2">0x02 Mobility</option>
+              <option value="3">0x03 Payload</option><option value="4">0x04 Arm</option><option value="255">0xFF Broadcast</option>
+            </select></label>
+          <label class="field"><span>Reply timeout</span>
+            <select id="timeoutSel"><option value="1000">1.0 s</option><option value="2000" selected>2.0 s</option><option value="4000">4.0 s</option></select></label>
+          <label class="field"><span>Inter-byte timeout</span>
+            <select id="ibtSel"><option value="0.05">50 ms (ICD)</option><option value="0.1" selected>100 ms</option><option value="0.25">250 ms</option></select></label>
+          <label class="check"><input type="checkbox" id="slipChk"> SLIP transparency (must match rover)</label>
+        </div>
+      </details>
+      <button id="btnConnect" class="btn btn-primary btn-block" type="button">Connect</button>
+      <p id="serialNote" class="note" hidden></p>
+      <dl class="stats" id="stats" aria-label="Link statistics">
+        <div><dt>Frames OK</dt><dd id="sOk">0</dd></div>
+        <div><dt>CRC errors</dt><dd id="sCrc">0</dd></div>
+        <div><dt>Framing errors</dt><dd id="sFrm">0</dd></div>
+        <div><dt>Byte timeouts</dt><dd id="sTo">0</dd></div>
+        <div><dt>Bytes RX / TX</dt><dd id="sBytes">0 / 0</dd></div>
+        <div><dt>No-reply / NACK</dt><dd id="sReq">0 / 0</dd></div>
+        <div><dt>PING RTT</dt><dd id="sRtt">—</dd></div>
+        <div><dt>RTT avg (min–max)</dt><dd id="sRttAvg">—</dd></div>
+      </dl>
+    </section>
+
+    <section class="panel" id="panelCmd" aria-labelledby="hCmd">
+      <header class="panel-h"><h2 id="hCmd">Commands</h2><span id="queueMeta" class="meta">idle</span></header>
+      <div class="cmd-grid">
+        <button class="btn" type="button" data-cmd="ping" aria-keyshortcuts="P" title="Shortcut: P">Ping<kbd>P</kbd></button>
+        <button class="btn" type="button" data-cmd="tlm" aria-keyshortcuts="T" title="Shortcut: T">Get TLM<kbd>T</kbd></button>
+        <button class="btn" type="button" data-cmd="cap" aria-keyshortcuts="C" title="Shortcut: C">Capture image<kbd>C</kbd></button>
+        <button class="btn" type="button" data-cmd="img" aria-keyshortcuts="I" title="Shortcut: I">Get image<kbd>I</kbd></button>
+        <button class="btn" type="button" data-cmd="scan" aria-keyshortcuts="G" title="Shortcut: G">Start scan<kbd>G</kbd></button>
+        <button class="btn" type="button" data-cmd="stop" aria-keyshortcuts="H" title="Shortcut: H">Stop scan<kbd>H</kbd></button>
+        <button class="btn" type="button" data-cmd="collect" aria-keyshortcuts="O" title="Shortcut: O">Collect object<kbd>O</kbd></button>
+        <button class="btn btn-warn" type="button" data-cmd="clear" aria-keyshortcuts="Shift+C" title="Shortcut: Shift+C">Clear E-stop<kbd>⇧C</kbd></button>
+      </div>
+      <div class="inline-row">
+        <label class="field grow"><span>Mode</span>
+          <select id="modeSel">
+            <option value="0">IDLE</option><option value="1">TELEOP</option><option value="2">AUTONOMOUS</option><option value="3">SAFE</option>
+          </select></label>
+        <button class="btn" type="button" data-cmd="mode">Set mode</button>
+      </div>
+      <div class="inline-row">
+        <label class="switch"><input type="checkbox" id="autoPoll" aria-keyshortcuts="R"><span class="track" aria-hidden="true"></span>Auto-poll TLM<kbd>R</kbd></label>
+        <label class="field compact"><span class="sr-only">Poll interval</span>
+          <select id="pollInt" aria-label="Poll interval">
+            <option value="0.5">0.5 s</option><option value="1" selected>1 s</option><option value="2">2 s</option>
+            <option value="5">5 s</option><option value="10">10 s</option>
+          </select></label>
+      </div>
+      <div id="cmdResult" class="cmd-result" role="status" aria-live="polite">Not connected.</div>
+    </section>
+
+    <section class="panel" id="panelDrive" aria-labelledby="hDrive">
+      <header class="panel-h"><h2 id="hDrive">Drive</h2><span id="driveMeta" class="meta">stopped</span></header>
+      <div class="drive">
+        <div class="pad" role="group" aria-label="Drive pad (hold)">
+          <button type="button" data-v="1" data-w="1" aria-label="Forward left">↖</button>
+          <button type="button" data-v="1" data-w="0" aria-label="Forward">↑</button>
+          <button type="button" data-v="1" data-w="-1" aria-label="Forward right">↗</button>
+          <button type="button" data-v="0" data-w="1" aria-label="Turn left">↺</button>
+          <button type="button" data-v="0" data-w="0" class="pad-stop" aria-label="Stop">■</button>
+          <button type="button" data-v="0" data-w="-1" aria-label="Turn right">↻</button>
+          <button type="button" data-v="-1" data-w="-1" aria-label="Back left">↙</button>
+          <button type="button" data-v="-1" data-w="0" aria-label="Back">↓</button>
+          <button type="button" data-v="-1" data-w="1" aria-label="Back right">↘</button>
+        </div>
+        <div class="sliders">
+          <label>Speed <output id="vOut">40 %</output><input type="range" id="vMax" min="10" max="100" step="5" value="40"></label>
+          <label>Turn <output id="wOut">50 %</output><input type="range" id="wMax" min="10" max="100" step="5" value="50"></label>
+          <p class="hint">Hold <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows. Release = stop. DRIVE is refreshed at 4 Hz with a 600 ms watchdog.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====================================================== centre column -->
+  <div class="col col-center">
+    <section class="panel" id="panelTlm" aria-labelledby="hTlm">
+      <header class="panel-h"><h2 id="hTlm">Telemetry</h2>
+        <span class="meta"><span id="tlmAge">no data</span><span class="sep">·</span><span id="tlmVer">—</span><span class="sep">·</span>uptime <span id="uptime">—</span></span></header>
+      <div class="gauges">
+        <div class="gauge" id="gTemp" role="meter" aria-label="Temperature" aria-valuemin="-10" aria-valuemax="60">
+          <canvas aria-hidden="true"></canvas><div class="g-val"><span class="v">—</span><span class="u">°C</span></div><div class="g-label">Temperature</div></div>
+        <div class="gauge" id="gHum" role="meter" aria-label="Humidity" aria-valuemin="0" aria-valuemax="100">
+          <canvas aria-hidden="true"></canvas><div class="g-val"><span class="v">—</span><span class="u">%RH</span></div><div class="g-label">Humidity</div></div>
+        <div class="gauge" id="gPres" role="meter" aria-label="Pressure" aria-valuemin="950" aria-valuemax="1050">
+          <canvas aria-hidden="true"></canvas><div class="g-val"><span class="v">—</span><span class="u">hPa</span></div><div class="g-label">Pressure</div></div>
+        <div class="gauge" id="gBatt" role="meter" aria-label="Battery voltage" aria-valuemin="10" aria-valuemax="12.6">
+          <canvas aria-hidden="true"></canvas><div class="g-val"><span class="v">—</span><span class="u">V</span></div><div class="g-label">Battery <span id="battStatus" class="mini-status"></span></div></div>
+      </div>
+    </section>
+
+    <div class="row3">
+      <section class="panel" id="panelAtt" aria-labelledby="hAtt">
+        <header class="panel-h"><h2 id="hAtt">Attitude</h2></header>
+        <div class="att-wrap"><canvas id="attCanvas" role="img" aria-label="Attitude indicator"></canvas></div>
+        <div class="kv"><span>Roll <b id="rollV">—</b></span><span>Pitch <b id="pitchV">—</b></span><span>Yaw <b id="yawV">—</b></span></div>
+      </section>
+      <section class="panel" id="panelTrack" aria-labelledby="hTrack">
+        <header class="panel-h"><h2 id="hTrack">Track</h2><button class="link-btn" type="button" id="btnClearTrack">clear</button></header>
+        <div class="chart-wrap track-wrap"><canvas id="trackCanvas" role="img" aria-label="Rover track in the map frame"></canvas><div class="tip" hidden></div></div>
+        <div class="kv"><span>x <b id="xV">—</b></span><span>y <b id="yV">—</b></span><span>Heading <b id="hdgV">—</b></span></div>
+      </section>
+      <section class="panel" id="panelEnv" aria-labelledby="hEnv">
+        <header class="panel-h"><h2 id="hEnv">Environment</h2><span class="meta">ADC 0–1023</span></header>
+        <div class="meters" id="meters">
+          <div class="meter" data-key="mq2_raw"><span class="m-name" title="MQ-2 H₂ / LPG / propane / smoke sensor">Gas MQ-2</span><span class="m-bar" role="meter" aria-label="Gas MQ-2" aria-valuemin="0" aria-valuemax="1023"><i></i></span><span class="m-val">—</span></div>
+          <div class="meter" data-key="mq4_raw"><span class="m-name" title="MQ-4 methane (CH₄) sensor">Gas MQ-4</span><span class="m-bar" role="meter" aria-label="Gas MQ-4" aria-valuemin="0" aria-valuemax="1023"><i></i></span><span class="m-val">—</span></div>
+          <div class="meter" data-key="soil_raw"><span class="m-name">Soil moisture</span><span class="m-bar" role="meter" aria-label="Soil moisture" aria-valuemin="0" aria-valuemax="1023"><i></i></span><span class="m-val">—</span></div>
+          <div class="meter" data-key="rain_raw"><span class="m-name">Rain sensor</span><span class="m-bar" role="meter" aria-label="Rain sensor" aria-valuemin="0" aria-valuemax="1023"><i></i></span><span class="m-val">—</span></div>
+        </div>
+        <div class="env-status">
+          <div class="env-box"><span class="env-k">Metal / proximity</span><span id="proxV" class="state" data-state="none">—</span></div>
+          <div class="env-box"><span class="env-k">Closest obstacle</span><span class="env-big" id="rangeV">—</span><span id="rangeState" class="state" data-state="none"></span></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" id="panelCharts" aria-labelledby="hCharts">
+      <header class="panel-h"><h2 id="hCharts">History</h2>
+        <div class="tools">
+          <div class="seg seg-sm" role="radiogroup" aria-label="Time window" id="winSeg">
+            <button type="button" role="radio" aria-checked="false" data-win="60">1 min</button>
+            <button type="button" role="radio" aria-checked="true" data-win="300">5 min</button>
+            <button type="button" role="radio" aria-checked="false" data-win="900">15 min</button>
+            <button type="button" role="radio" aria-checked="false" data-win="0">All</button>
+          </div>
+          <div class="seg seg-sm" role="radiogroup" aria-label="View" id="viewSeg">
+            <button type="button" role="radio" aria-checked="true" data-view="charts">Charts</button>
+            <button type="button" role="radio" aria-checked="false" data-view="table">Table</button>
+          </div>
+        </div>
+      </header>
+      <div class="charts" id="charts"></div>
+      <div class="table-wrap" id="tableView" hidden>
+        <table class="tlm-table"><caption class="sr-only">Latest telemetry samples</caption><thead></thead><tbody></tbody></table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ======================================================= right column -->
+  <div class="col col-right">
+    <section class="panel" id="panelImage" aria-labelledby="hImg">
+      <header class="panel-h"><h2 id="hImg">Camera</h2><span id="imgMeta" class="meta">no image</span></header>
+      <div class="img-wrap">
+        <canvas id="imgCanvas" width="100" height="100" role="img" aria-label="Last rover image"></canvas>
+        <div id="imgEmpty" class="img-empty">No image yet.<br>Capture, then Get image.</div>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="imgBar"></i></div>
+      <div id="chunkMap" class="chunk-map" role="img" aria-label="Image chunk map"></div>
+      <div class="chunk-legend"><span><i class="c-ok"></i>received</span><span><i class="c-missing"></i>missing</span><span><i class="c-pending"></i>pending</span></div>
+      <div class="inline-row">
+        <label class="field grow"><span class="sr-only">Image request</span>
+          <select id="imgQuality" aria-label="Image request type">
+            <option value="legacy" selected>Legacy GET_IMAGE · 100×100 gray</option>
+            <option value="0">v2 IMAGE_CHUNK · raw gray8</option>
+            <option value="30">v2 IMAGE_CHUNK · JPEG q30</option>
+            <option value="60">v2 IMAGE_CHUNK · JPEG q60</option>
+            <option value="90">v2 IMAGE_CHUNK · JPEG q90</option>
+          </select></label>
+        <button class="btn" type="button" id="btnSaveImg" disabled>Save PNG</button>
+      </div>
+      <div id="thumbs" class="thumbs" aria-label="Previous images"></div>
+    </section>
+
+    <section class="panel panel-log" id="panelLog" aria-labelledby="hLog">
+      <header class="panel-h"><h2 id="hLog">Frame log</h2><span id="logCount" class="meta">0 frames</span></header>
+      <div class="log-tools">
+        <input id="logFilter" type="search" placeholder="Filter: type, hex or text  ( / )" aria-label="Filter log" aria-keyshortcuts="/">
+        <div class="log-bar">
+        <div class="log-checks">
+          <label class="check"><input type="checkbox" id="fTX" checked> TX</label>
+          <label class="check"><input type="checkbox" id="fRX" checked> RX</label>
+          <label class="check"><input type="checkbox" id="fERR" checked> ERR</label>
+          <label class="check"><input type="checkbox" id="fSYS" checked> SYS</label>
+          <label class="check"><input type="checkbox" id="fPoll"> hide TLM</label>
+        </div>
+        <div class="log-btns">
+          <button class="btn btn-sm" type="button" id="btnPause" aria-pressed="false">Pause</button>
+          <button class="btn btn-sm" type="button" id="btnClearLog">Clear</button>
+        </div>
+        </div>
+      </div>
+      <div id="logList" class="log-list" role="log" aria-label="Frames" tabindex="0"></div>
+      <div class="inline-row data-row">
+        <button class="btn btn-sm" type="button" id="btnCsv">Export TLM CSV</button>
+        <button class="btn btn-sm" type="button" id="btnSaveSession">Save session</button>
+        <button class="btn btn-sm" type="button" id="btnLoadSession">Load session</button>
+        <input type="file" id="fileSession" accept=".json,application/json" hidden>
+      </div>
+    </section>
+  </div>
+</main>
+
+<dialog id="helpDlg" aria-labelledby="hHelp">
+  <form method="dialog">
+    <h2 id="hHelp">Keyboard shortcuts</h2>
+    <table class="keys">
+      <tr><td><kbd>Space</kbd></td><td>E-STOP (works everywhere except text fields)</td></tr>
+      <tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows</td><td>Drive while held (release = stop)</td></tr>
+      <tr><td><kbd>P</kbd></td><td>Ping</td></tr>
+      <tr><td><kbd>T</kbd></td><td>Get telemetry</td></tr>
+      <tr><td><kbd>R</kbd></td><td>Toggle auto-poll</td></tr>
+      <tr><td><kbd>C</kbd> / <kbd>I</kbd></td><td>Capture image / Get image</td></tr>
+      <tr><td><kbd>G</kbd> / <kbd>H</kbd></td><td>Start scan / Stop scan</td></tr>
+      <tr><td><kbd>O</kbd></td><td>Collect object</td></tr>
+      <tr><td><kbd>Shift</kbd>+<kbd>C</kbd></td><td>Clear E-stop</td></tr>
+      <tr><td><kbd>M</kbd></td><td>Focus mode selector</td></tr>
+      <tr><td><kbd>/</kbd></td><td>Filter the frame log</td></tr>
+      <tr><td><kbd>?</kbd></td><td>This help</td></tr>
+      <tr><td>Chart focused: <kbd>←</kbd><kbd>→</kbd></td><td>Move the crosshair</td></tr>
+    </table>
+    <p class="hint">The E-STOP bypasses the command queue, cancels queued motion commands and is retried until the rover acknowledges it.</p>
+    <button class="btn" value="close">Close</button>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts" aria-live="assertive"></div>
+
+<noscript><p class="noscript">The ground station needs JavaScript.</p></noscript>
+<script>
+  // ES modules cannot be loaded from file:// in Chrome/Edge, so a double-clicked
+  // index.html uses the generated classic bundle (tools/bundle_web.py); served
+  // over http(s) the ES modules are used directly.
+  (function () {
+    var s = document.createElement('script');
+    if (location.protocol === 'file:') { s.src = 'js/gs-bundle.js'; }
+    else { s.type = 'module'; s.src = 'js/app.js'; }
+    document.body.appendChild(s);
+  })();
+</script>
+</body>
+</html>

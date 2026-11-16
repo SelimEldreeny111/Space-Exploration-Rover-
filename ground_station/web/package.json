@@ -1,0 +1,10 @@
+{
+  "name": "missionx-ground-station-web",
+  "version": "2.0.0",
+  "private": true,
+  "description": "MISSION X zero-install browser ground station (Web Serial). No dependencies, no build step.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
