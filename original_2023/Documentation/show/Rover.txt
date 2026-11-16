@@ -1,0 +1,46 @@
+Design and Implementation of space exploration rover using autonomous navigation system.
+
+تصميم وتنفيذ روڤر للفضاء لاستكشاف الكواكب  باستخدام نظام ملاحة آلي.
+
+مشروع تخرج  بكلية علوم الملاحة وتكنولوجيا الفضاء وهو عبارة عن روفر ب six wheels مسئولة عن جزء الlocomotion، الgoal/objective انه يروح distant environments or even planets اللي صعب على الإنسان يروح يوصلها أو يبقى فيها
+
+الروفر بيتحرك بـautonomous navigation أي إنه بيقدر يرسم خريطة للsurroundings حواليه وكمان يحدد الـpath اللي يقدر يتحرك فيه بنفسه عن طريق SLAM Navigation وكمان يرصد أي obstacles ويتجنبها باستخدام الليدار
+
+وباستخدام السنسورز المختلفة الموجودة عليه هيقدر يحلل مناخ وظروف الenvironment دي (من temperature وhumidity وgases ممكن تكون متواجدة وغيرها)، كذلك باستخدام الروبوتك آرم يقدر يcollect أي samples على التربة ويحللها
+
+ونقدر نطلب منه الداتا اللي هو جمعها عن طريق الground station ونعرضها في charts وmeters وimages على حسب نوعها
+
+الباور بتاعة الروفر بيستمدها من Solar Panel في وجود الشمس أو بالنهار وفي حالة غياب الشمس بيشتغل بالبطاريات
+
+المشروع بتاعنا ممكن يفيد المجتمع في ايه:
+
+أول حاجة إنه زي ما قلنا، يقدر يستكشف Difficult or distant environments الإنسان ميقدرش يروحلها، 
+
+ثانيا ممكن يفيدنا في انه يكتشف معادن أو مواد جديدة عن طريق تحليله لسطح تربة الـenvironments دي.
+
+طلاب المشروع ١٠ طلاب وهم :
+
+سليم الدريني الدريني, عبدالرحمن باسم علي 
+
+عمر خالد عمار ،عمر عبدالحكيم عبدالاه 
+
+أحمد محمد احمد غلاب ،احمد ممدوح ابراهيم
+
+براء محمد جبر ،محمد حاتم محمد 
+
+إيمان عزت السيد ،آيه عيد فكري
+
+وبإشراف 
+
+ا.م.د/ خالد يوسف وكيل الكلية للدراسات العليا 
+
+م/ يسري سليمان مدير إدارة تطوير المحطات الارضيه بوكالة الفضاء المصريه.
+
+Our project is a six-wheeled Rover and its goal is to reach distant environments and planets that are difficult for humans to reach or survive.
+
+The Rover moves using Autonomous Navigation, that means it can draw a map of the surroundings and create a path to move through & avoid any obstacles along the way. This is done with SLAM Navigation using the LIDAR.
+
+Using the various sensors mounted on it, the Rover can  analyze the weather & conditions of the environment (Temperature, humidity, different sensors for gases, etc.) It can also collect samples on the soil surface and analyze it using its Robotic Arm.
+
+These data can then be transmitted to our Ground Station to be displayed properly in the form of meters, charts, images, etc
+
