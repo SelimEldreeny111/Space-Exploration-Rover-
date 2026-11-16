@@ -120,6 +120,13 @@ def test_collect_object_busy(core):
     assert Nack.unpack(r.data) == Nack(PT.COLLECT_OBJECT, NackReason.BUSY)
 
 
+def test_collect_object_refused_with_estop(core):
+    core.ports.latched = True
+    (r,) = core.handle(gs(PT.COLLECT_OBJECT))
+    assert Nack.unpack(r.data) == Nack(PT.COLLECT_OBJECT, NackReason.NOT_PERMITTED)
+    assert not core.ports.collect_busy
+
+
 def test_estop_and_clear(core):
     (r,) = core.handle(gs(PT.ESTOP))
     assert (r.type, r.data) == (PT.ACK, bytes([PT.ESTOP])) and core.ports.latched

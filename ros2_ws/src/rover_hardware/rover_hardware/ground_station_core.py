@@ -131,6 +131,8 @@ class GroundStationCore:
         return [self._reply(fr, PT.STOP_SCAN)]
 
     def _collect(self, fr: Frame) -> List[Frame]:
+        if self.ports.estop_latched():                    # never start the arm while e-stopped
+            return [self._nack(fr, NackReason.NOT_PERMITTED)]
         if not self.ports.start_collect():
             return [self._nack(fr, NackReason.BUSY)]
         return [self._reply(fr, PT.COLLECT_OBJECT)]

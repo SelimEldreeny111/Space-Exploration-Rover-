@@ -115,6 +115,7 @@ class GroundStationBridge(Node):
         self.create_subscription(Odometry, "odometry/filtered",
                                  lambda m: setattr(self, "_odom", m), RELIABLE_QOS)
         self.create_subscription(RoverStatus, "rover/status", self._on_status, RELIABLE_QOS)
+        self.create_subscription(Bool, "rover/estop", self._on_estop_topic, RELIABLE_QOS)
         for i, name in enumerate(ULTRASONIC_NAMES):
             self.create_subscription(Range, f"ultrasonic/{name}",
                                      lambda m, i=i: self._ranges.__setitem__(i, m.range),
@@ -196,13 +197,23 @@ class GroundStationBridge(Node):
         return self._estop_requested or bool(self._mobility_faults & Fault.ESTOP)
 
     def estop(self, engage: bool) -> None:
-        self._estop_requested = bool(engage)
+        self._apply_estop(engage)
         self.estop_pub.publish(Bool(data=bool(engage)))
+
+    def _apply_estop(self, engage: bool) -> None:
+        self._estop_requested = bool(engage)
         if engage:
             self.stop_navigation()
+            self._abort_collect("e-stop")
             self.set_mode(Mode.IDLE)
         else:  # the next HEARTBEAT re-asserts the bit if the hardware switch is still pressed
             self._mobility_faults &= ~int(Fault.ESTOP)
+
+    def _on_estop_topic(self, msg: Bool) -> None:
+        # e-stop engaged or cleared by another node or from the ROS command line: keep this
+        # bridge in step. Our own messages are ignored because the state already matches.
+        if bool(msg.data) != self._estop_requested:
+            self._apply_estop(bool(msg.data))
 
     def drive(self, v: float, w: float, duration_s: float) -> None:
         self._drive_cmd = (v, w)
@@ -309,8 +320,16 @@ class GroundStationBridge(Node):
 
     def _on_status(self, msg: RoverStatus) -> None:
         if msg.source == Addr.MOBILITY:
+            was_latched = bool(self._mobility_faults & Fault.ESTOP)
             self._mobility_faults = int(msg.fault_flags)
             self._battery_v = float(msg.battery_v)
+            if (self._mobility_faults & Fault.ESTOP) and not was_latched \
+                    and not self._estop_requested:
+                # Latched on the Mega itself (hardware switch, or an ESTOP that did not come
+                # through this bridge): act as for a GS E-STOP, so that clearing it can never
+                # restart exploration or a sample sequence by itself.
+                self.get_logger().warn("mobility MCU reports e-stop latched (hardware switch?)")
+                self.estop(True)
 
     def _publish_mode(self) -> None:
         self.mode_pub.publish(UInt8(data=int(self.mode)))
@@ -343,8 +362,18 @@ class GroundStationBridge(Node):
             self.cmd_pub.publish(Twist())
             self._zero_burst -= 1
 
+    def _abort_collect(self, why: str) -> None:
+        if self._collect_idx is not None:
+            self._collect_idx = None
+            self.get_logger().warn(f"sample collection sequence aborted ({why})")
+
     def _collect_tick(self) -> None:
-        if self._collect_idx is None or time.monotonic() < self._collect_next_t:
+        if self._collect_idx is None:
+            return
+        if self.estop_latched():      # also the hardware switch, seen in the mobility HEARTBEAT
+            self._abort_collect("e-stop latched")
+            return
+        if time.monotonic() < self._collect_next_t:
             return
         if self._collect_idx >= len(self.collect_steps):
             self._collect_idx = None

@@ -10,7 +10,8 @@ navigation and exploration can be developed and evaluated without the rover.
 
 Interfaces (serial protocol, addresses, payloads, physical parameters, topic
 table) are normative in [`docs/ICD.md`](ICD.md). This document describes the
-ROS 2 side.
+ROS 2 side. For running the rover day to day, see the
+[operator manual](OPERATOR_MANUAL.md).
 
 ## 1. Packages (`ros2_ws/src`)
 
@@ -77,6 +78,7 @@ flowchart LR
   GSB -->|"/cmd_vel (DRIVE)"| MB
   GSB -->|"/arm/command"| AB
   GSB -->|"/rover/estop"| MB
+  GSB -->|"/rover/estop"| AB
   GSB <-->|"/ssp/to_* · /ssp/from_*"| MB
   PB -->|"/environment"| GSB
   V4L -->|"/camera/image_raw"| GSB
@@ -104,7 +106,7 @@ slam_toolbox, Nav2 and the explorer run unchanged.
 | `/rover/status` | rover_interfaces/RoverStatus (HEARTBEAT, `source` = MCU address) | MCU bridges → GS bridge | reliable |
 | `/rover/mode` | std_msgs/UInt8 (0 IDLE, 1 TELEOP, 2 AUTONOMOUS, 3 SAFE) | ground_station_bridge → explorer | transient local, re-published 1 Hz |
 | `/rover/set_mode` (service) | rover_interfaces/SetMode | any → ground_station_bridge | — |
-| `/rover/estop` | std_msgs/Bool (true = engage) | GS bridge, operator → mobility_bridge, rover_sim | reliable |
+| `/rover/estop` | std_msgs/Bool (true = engage) | GS bridge, operator → mobility_bridge, arm_bridge (arm freezes), ground_station_bridge (keeps its state in step), rover_sim | reliable |
 | `/mobility_bridge/estop`, `/mobility_bridge/clear_estop` (services) | std_srvs/Trigger | operator → mobility_bridge | — |
 | `/arm/command` | rover_interfaces/ArmCommand | GS bridge (COLLECT_OBJECT), operator → arm_bridge | reliable |
 | `/arm/joint_states`, `/arm/moving` | sensor_msgs/JointState, std_msgs/Bool | arm_bridge | reliable |
@@ -246,8 +248,8 @@ HC-12 at 9600 baud, address 0x01, and is compatible with the 2023 LabVIEW GS:
 | CAP_IMAGE | stores the latest `/camera/image_raw` (cv_bridge/OpenCV if installed, numpy fallback, test pattern without camera), echo |
 | GET_IMAGE | LEN 0: legacy 100×100 gray in 50 × 200 B type-0x08 frames; LEN 1 (quality): IMAGE_CHUNK frames, JPEG 160×120 with OpenCV, else gray8. Paced to the 9600-baud UART (~11 s legacy) |
 | START_SCAN / STOP_SCAN | mode AUTONOMOUS / IDLE (STOP also cancels all Nav2 goals and sends zero `/cmd_vel`), echo; START refused (NACK 4) while e-stopped |
-| COLLECT_OBJECT | stops the rover, runs the `/arm/command` pose sequence (READY, GRIP_OPEN, REACH_GROUND, GRIP_CLOSE, LIFT_SAMPLE, DEPOSIT, GRIP_OPEN, STOW), echo; NACK 3 if busy |
-| ESTOP / CLEAR_ESTOP | `/rover/estop` → mobility MCU, ACK(type) |
+| COLLECT_OBJECT | stops the rover, runs the `/arm/command` pose sequence (READY, GRIP_OPEN, REACH_GROUND, GRIP_CLOSE, LIFT_SAMPLE, DEPOSIT, GRIP_OPEN, STOW), echo; NACK 3 if busy, NACK 4 while e-stopped; any e-stop aborts the sequence |
+| ESTOP / CLEAR_ESTOP | `/rover/estop` → mobility and arm MCUs (motors stop, arm freezes); ESTOP also cancels navigation, aborts a sample sequence and sets mode IDLE; ACK(type). An e-stop latched on the Mega itself (hardware switch) is treated the same way when its HEARTBEAT arrives, so clearing an e-stop never restarts motion |
 | SET_MODE | ACK(0x53) |
 | DRIVE | mode TELEOP + timed `/cmd_vel` (±100 % of 0.4 m/s / 0.8 rad/s), ACK(0x60) |
 | DEST 0x02/0x03/0x04 | routed unchanged through `/ssp/to_<mcu>`; replies return via `/ssp/from_<mcu>`; NACK 5 if that bridge is not running |
@@ -368,6 +370,19 @@ Second pass, Jazzy API review (same PC, still no ROS), 2026-11-16:
   `sim.launch.py` now types `world` (str) and `real_time_factor` (float)
   explicitly, so `world:=""` and `real_time_factor:=2` no longer abort the
   launch with a parameter type error.
+
+Third pass, e-stop review while writing the operator manual (same PC), 2026-11-16:
+
+* Fixed: an e-stop did not reach the arm, and the bridge kept stepping a
+  running COLLECT_OBJECT sequence. A hardware e-stop left the mode AUTONOMOUS,
+  so clearing it restarted exploration. An e-stop cleared from ROS left the
+  GS bridge latched. Now `arm_bridge` forwards `/rover/estop` to the arm MCU.
+  The GS bridge refuses COLLECT_OBJECT while e-stopped (NACK 4) and aborts a
+  running sequence on any e-stop. It also treats an e-stop latched on the Mega
+  (HEARTBEAT bit 0) like its own, and follows `/rover/estop`.
+* Verified with a new `rover_hardware` pytest case and 18 checks of both nodes
+  against the fake rclpy layer (GS, hardware-switch and ROS-topic e-stops;
+  clearing never restarts motion).
 
 **Only verifiable on a real Jazzy install / the rover:**
 

@@ -4,6 +4,8 @@
   or ARM_SET_JOINTS (angles clamped to the ICD section 9.5 limits).
 * ARM_STATE (5 Hz and on change) -> ``/arm/joint_states`` (sensor_msgs/JointState,
   servo angles in rad) and ``/arm/moving`` (std_msgs/Bool).
+* ``/rover/estop`` (std_msgs/Bool, true = engage) -> ESTOP / CLEAR_ESTOP: the
+  MCU freezes the arm in place and refuses motion commands until cleared.
 * ACK / NACK from the MCU are logged; HEARTBEAT -> ``/rover/status``.
 """
 from __future__ import annotations
@@ -25,6 +27,16 @@ class ArmBridge(McuBridgeNode):
         self.moving_pub = self.create_publisher(Bool, "arm/moving", RELIABLE_QOS)
         self.status_pub = self.create_publisher(RoverStatus, "rover/status", RELIABLE_QOS)
         self.create_subscription(ArmCommand, "arm/command", self._on_command, RELIABLE_QOS)
+        self.create_subscription(Bool, "rover/estop", lambda m: self._set_estop(m.data),
+                                 RELIABLE_QOS)
+
+    def _set_estop(self, engage: bool) -> None:
+        if bool(engage):
+            ok = self.send(PT.ESTOP)
+            self.get_logger().warn("E-STOP: arm frozen" if ok else "E-STOP: arm link down")
+        else:
+            self.send(PT.CLEAR_ESTOP)
+            self.get_logger().info("E-stop cleared (arm)")
 
     def _on_command(self, msg: ArmCommand) -> None:
         try:
