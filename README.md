@@ -27,6 +27,7 @@ and otherwise from `original_2023/`. They never modify it.
 | **ROS 2 Jazzy stack** (9 packages) + simulator | `ros2_ws/`, guide `docs/ROS2.md`, Docker `docker/` | Unit-tested; not yet run on a real ROS 2 install (see below) |
 | **Firmware** (Mega mobility, Uno payload, Uno arm, legacy fix) | `firmware/`, guide `firmware/README.md` | All 4 sketches compile; 5 696 + 82 host tests pass; not yet flashed to hardware |
 | **Ground station** (web app with Web Serial + Python CLI/virtual rover) | `ground_station/`, guide `ground_station/README.md` | 66 JS + 47 Python tests pass; exercised in the browser |
+| **Operator manual**: safety, charging, power-on, ground station, driving, mapping, navigation, exploration, sampling, e-stop, shutdown, troubleshooting | `docs/OPERATOR_MANUAL.md` | Written from the firmware and ROS code; to be checked on the real rover |
 | **Interface Control Document v2.0** | `docs/ICD.md` | Wire-compatible with the 2023 LabVIEW ground station |
 | **Audit of the 2023 project** | `docs/AUDIT.md` | — |
 | **Analysis scripts** behind every number and figure in the paper | `analysis/` | Reproducible (see below) |
@@ -64,7 +65,7 @@ MissionX-Rover/
 ├── ground_station/   web/ (open index.html in Chrome/Edge), python/, tools/
 ├── analysis/         mobility, power, comms, sim_* studies, compose_photos, style
 ├── docker/           headless simulation + evaluation (ROS 2 Jazzy)
-├── docs/             ICD.md, ROS2.md, AUDIT.md
+├── docs/             OPERATOR_MANUAL.md, ICD.md, ROS2.md, AUDIT.md
 └── original_2023/    the 2023 project as submitted: Documentation/ (book, presentation,
                       videos, photos) and Space Exploration Rover/ (subsystem reports,
                       code, LabVIEW, Altium, SolidWorks)

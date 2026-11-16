@@ -17,6 +17,9 @@ length plausibility (§3 step 5a) and inter-byte timeout. The Python tools *reus
 (`web/js/ssp.js`, `web/js/protocol.js`) mirrors it line for line and is cross-checked
 against it byte for byte.
 
+For a complete operating session with the rover (power-on, driving, exploration, e-stop,
+shutdown), see the [operator manual](../docs/OPERATOR_MANUAL.md).
+
 ![Web ground station with the built-in virtual rover](docs/gs_screenshot.png)
 
 *`docs/gs_screenshot.png` — 1600×900, built-in virtual rover in autonomous exploration,

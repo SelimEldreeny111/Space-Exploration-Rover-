@@ -3,7 +3,8 @@
 Embedded firmware for the MISSION X six-wheel rocker-bogie rover (Beni-Suef
 University / Egyptian Space Agency). The normative interface is
 [`docs/ICD.md`](../docs/ICD.md); the Python reference implementation of the
-protocol is `ros2_ws/src/rover_core` (`crc.py`, `ssp.py`, `protocol.py`).
+protocol is `ros2_ws/src/rover_core` (`crc.py`, `ssp.py`, `protocol.py`). For
+operating the rover, see the [operator manual](../docs/OPERATOR_MANUAL.md).
 
 ```
 firmware/
